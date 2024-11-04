@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>AI Malware Detective</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                padding: 0;
+            }
+            .container {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            .chat-box {
+                background-color: #f1f1f1;
+                padding: 20px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+            }
+            .chat-input {
+                display: flex;
+                justify-content: space-between;
+            }
+            .chat-input input {
+                width: 80%;
+                padding: 10px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+            }
+            .chat-input button {
+                padding: 10px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+            .chat-input button:hover {
+                background-color: #0056b3;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>Chat with Sherlock: The Malware Detective</h2>
+
+            <div class="chat-box">
+                <p><strong>You:</strong> {{ user_message }}</p>
+                <p><strong>Sherlock:</strong> {{ model_reply|safe }}</p>
+            </div>
+
+            <form action="/send" method="POST" class="chat-input">
+                <input
+                    type="text"
+                    name="message"
+                    placeholder="Type your message here"
+                    required
+                />
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </body>
+</html>
