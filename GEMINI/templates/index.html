@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>India-Bot</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='style.css') }}"
+        />
+    </head>
+    <body>
+        <div class="container">
+            <h1>India-Bot</h1>
+            <form method="POST" action="/ask">
+                <label for="question">Ask a question about India:</label><br />
+                <textarea
+                    id="question"
+                    name="question"
+                    rows="5"
+                    cols="33"
+                ></textarea
+                ><br /><br />
+                <input type="submit" value="Ask" />
+            </form>
+            {% if question %}
+            <h2>Your Question:</h2>
+            <p>{{ question }}</p>
+            <h2>India-Bot's Answer:</h2>
+            <p>{{ answer }}</p>
+            {% endif %}
+        </div>
+    </body>
+</html>
