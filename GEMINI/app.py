@@ -2,7 +2,7 @@ from flask import Flask, render_template, request
 import os
 import google.generativeai as genai
 
-api_key = "AIzaSyBTW4-2KDgI30yBmUm4f6ETGaeZvr3c7P0"
+api_key = "AIzaSyAJWMd37V47V5M8_OYmtK41u6ONLnL7yuI"
 
 os.environ["GEMINI_API_KEY"] = api_key
 
@@ -11,13 +11,13 @@ genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 generation_config = {
     "temperature": 1,
     "top_p": 0.95,
-    "top_k": 64,
+    "top_k": 40,
     "max_output_tokens": 8192,
     "response_mime_type": "text/plain",
 }
 
 model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
+    model_name="gemini-1.5-pro",
     generation_config=generation_config,
 )
 
