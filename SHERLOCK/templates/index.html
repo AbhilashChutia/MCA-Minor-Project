@@ -5,20 +5,40 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>AI Malware Detective</title>
         <style>
+            /* Default Light Mode Styles */
             body {
                 font-family: Arial, sans-serif;
                 margin: 20px;
                 padding: 0;
+                background-color: whitesmoke;
+                color: #333;
+                transition: background-color 0.3s, color 0.3s;
             }
             .container {
                 max-width: 600px;
                 margin: 0 auto;
+                background-color: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                padding: 20px;
+                transition: background-color 0.3s, color 0.3s;
             }
             .chat-box {
                 background-color: #f1f1f1;
+                height: 70vh;
                 padding: 20px;
                 border-radius: 10px;
                 margin-bottom: 20px;
+                overflow-y: auto;
+                border: 1px solid #ccc;
+                transition: background-color 0.3s, border-color 0.3s;
+            }
+            .chat-box p {
+                margin: 10px 0;
+                word-wrap: break-word;
+            }
+            .chat-box strong {
+                color: #007bff;
             }
             .chat-input {
                 display: flex;
@@ -29,27 +49,88 @@
                 padding: 10px;
                 border-radius: 5px;
                 border: 1px solid #ccc;
+                font-size: 16px;
+                transition: background-color 0.3s, color 0.3s;
             }
             .chat-input button {
-                padding: 10px;
+                padding: 10px 20px;
                 background-color: #007bff;
                 color: white;
                 border: none;
                 border-radius: 5px;
                 cursor: pointer;
+                font-size: 16px;
+                transition: background-color 0.3s ease;
             }
             .chat-input button:hover {
                 background-color: #0056b3;
             }
+
+            /* Dark Mode Styles */
+            body.dark-mode {
+                background-color: #121212;
+                color: #ffffff;
+            }
+            body.dark-mode .container {
+                background-color: #333333;
+                color: #ffffff;
+            }
+            body.dark-mode .chat-box {
+                background-color: #2c2c2c;
+                border-color: #444;
+            }
+            body.dark-mode .chat-box strong {
+                color: #4da6ff;
+            }
+            body.dark-mode .chat-input input {
+                background-color: #444;
+                color: #ffffff;
+                border-color: #666;
+            }
+
+            /* Dark Mode Toggle Button Styles */
+            .dark-mode-toggle {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 10px 15px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background-color 0.3s ease;
+            }
+            .dark-mode-toggle:hover {
+                background-color: #0056b3;
+            }
         </style>
     </head>
-    <body>
-        <div class="container">
-            <h2>Chat with Sherlock: The Malware Detective</h2>
+    <body onload="scrollToBottom()">
+        <!-- Dark Mode Toggle Button -->
+        <button id="darkModeToggle" class="dark-mode-toggle">
+            Toggle Dark Mode
+        </button>
 
-            <div class="chat-box">
-                <p><strong>You:</strong> {{ user_message }}</p>
-                <p><strong>Sherlock:</strong> {{ model_reply|safe }}</p>
+        <div class="container">
+            <h2>
+                Chat with Sherlock: The Malware Detective <br />
+                <span style="font-size: 24px; color: gray">
+                    ({{ 'English' if language == 'en' else 'Assamese' }})
+                </span>
+            </h2>
+
+            <div class="chat-box" id="chat-box">
+                {% for message in chat_history %}
+                <p>
+                    <strong
+                        >{{ 'You:' if message.role == 'user' else 'Sherlock:'
+                        }}</strong
+                    >
+                    {{ message.text|safe }}
+                </p>
+                {% endfor %}
             </div>
 
             <form action="/send" method="POST" class="chat-input">
@@ -58,9 +139,38 @@
                     name="message"
                     placeholder="Type your message here"
                     required
+                    autocomplete="off"
                 />
                 <button type="submit">Send</button>
             </form>
         </div>
+
+        <script>
+            // Scroll to bottom of chat box on load
+            function scrollToBottom() {
+                var chatBox = document.getElementById("chat-box");
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            // Dark Mode Toggle Logic
+            const toggleButton = document.getElementById("darkModeToggle");
+            toggleButton.addEventListener("click", () => {
+                document.body.classList.toggle("dark-mode");
+
+                // Save user's theme preference
+                if (document.body.classList.contains("dark-mode")) {
+                    localStorage.setItem("theme", "dark");
+                } else {
+                    localStorage.setItem("theme", "light");
+                }
+            });
+
+            // Apply saved theme on page load
+            document.addEventListener("DOMContentLoaded", () => {
+                if (localStorage.getItem("theme") === "dark") {
+                    document.body.classList.add("dark-mode");
+                }
+            });
+        </script>
     </body>
 </html>
