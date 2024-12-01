@@ -15,7 +15,8 @@
                 transition: background-color 0.3s, color 0.3s;
             }
             .container {
-                max-width: 600px;
+                max-width: 900px;
+                height: 91vh;
                 margin: 0 auto;
                 background-color: #ffffff;
                 border-radius: 10px;
@@ -25,7 +26,7 @@
             }
             .chat-box {
                 background-color: #f1f1f1;
-                height: 70vh;
+                height: 60vh;
                 padding: 20px;
                 border-radius: 10px;
                 margin-bottom: 20px;
@@ -65,7 +66,6 @@
             .chat-input button:hover {
                 background-color: #0056b3;
             }
-
             /* Dark Mode Styles */
             body.dark-mode {
                 background-color: #121212;
@@ -105,10 +105,48 @@
             .dark-mode-toggle:hover {
                 background-color: #0056b3;
             }
+
+            /* Image Upload Button */
+            .upload-btn {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-top: 20px;
+            }
+
+            .upload-btn input {
+                width: 80%;
+                padding: 10px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                font-size: 16px;
+                transition: background-color 0.3s, color 0.3s;
+            }
+
+            .upload-btn button {
+                padding: 10px 20px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+                margin-left: 10px;
+                transition: background-color 0.3s ease;
+            }
+
+            .upload-btn button:hover {
+                background-color: #0056b3;
+            }
+
+            .uploaded-image {
+                max-width: 100%;
+                border-radius: 5px;
+                margin-top: 10px;
+            }
         </style>
     </head>
     <body onload="scrollToBottom()">
-        <!-- Dark Mode Toggle Button -->
         <button id="darkModeToggle" class="dark-mode-toggle">
             Toggle Dark Mode
         </button>
@@ -124,11 +162,12 @@
             <div class="chat-box" id="chat-box">
                 {% for message in chat_history %}
                 <p>
-                    <strong
-                        >{{ 'You:' if message.role == 'user' else 'Sherlock:'
-                        }}</strong
-                    >
-                    {{ message.text|safe }}
+                    <strong>
+                        {{ 'You:' if message.role == 'user' else 'Sherlock:' }}
+                    </strong>
+                    {% if message.role == 'user' and 'image' in message %}
+                    <img src="{{ message.image }}" class="uploaded-image" />
+                    {% else %} {{ message.text|safe }} {% endif %}
                 </p>
                 {% endfor %}
             </div>
@@ -143,21 +182,28 @@
                 />
                 <button type="submit">Send</button>
             </form>
+
+            <form
+                action="/upload_image"
+                method="POST"
+                enctype="multipart/form-data"
+                class="upload-btn"
+            >
+                <input type="file" name="image" accept="image/*" required />
+                <button type="submit">Upload Image</button>
+            </form>
         </div>
 
         <script>
-            // Scroll to bottom of chat box on load
             function scrollToBottom() {
                 var chatBox = document.getElementById("chat-box");
                 chatBox.scrollTop = chatBox.scrollHeight;
             }
 
-            // Dark Mode Toggle Logic
             const toggleButton = document.getElementById("darkModeToggle");
             toggleButton.addEventListener("click", () => {
                 document.body.classList.toggle("dark-mode");
 
-                // Save user's theme preference
                 if (document.body.classList.contains("dark-mode")) {
                     localStorage.setItem("theme", "dark");
                 } else {
@@ -165,7 +211,6 @@
                 }
             });
 
-            // Apply saved theme on page load
             document.addEventListener("DOMContentLoaded", () => {
                 if (localStorage.getItem("theme") === "dark") {
                     document.body.classList.add("dark-mode");

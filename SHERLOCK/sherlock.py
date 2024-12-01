@@ -1,9 +1,13 @@
 from flask import Flask, request, render_template, session, redirect, url_for
 from translate import Translator
 import google.generativeai as genai
+import pytesseract
+from PIL import Image
+import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey' 
+app.secret_key = 'supersecretkey'
 
 genai.configure(api_key="AIzaSyAJWMd37V47V5M8_OYmtK41u6ONLnL7yuI")
 generation_config = {
@@ -40,10 +44,15 @@ chat_session = model.start_chat(
 
 translator = Translator(to_lang="as")  
 
-def translate_text_free(text):
-    """Translates text into Assamese using the free translate library."""
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+def translate_text_free_chunked(text, chunk_size=500):
+    """Translates text into Assamese using the free translate library with chunking."""
     try:
-        return translator.translate(text)
+        chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+        translated_chunks = [translator.translate(chunk) for chunk in chunks]
+        return ''.join(translated_chunks)
     except Exception as e:
         print(f"Translation error: {e}")
         return text 
@@ -87,13 +96,55 @@ def send_message():
     response = chat_session.send_message(user_message)
     model_reply = response.text.replace("\n", "<br>")
 
-    translated_reply = translate_text_free(model_reply) if language == 'as' else model_reply
+    translated_reply = translate_text_free_chunked(model_reply) if language == 'as' else model_reply
 
     session['chat_history'].append({"role": "user", "text": user_message})
     session['chat_history'].append({"role": "model", "text": translated_reply})
     session.modified = True
 
     return render_template('index.html', chat_history=session['chat_history'], language=language)
+
+@app.route('/upload_image', methods=['POST'])
+def upload_image():
+    if 'image' not in request.files:
+        return "No image file found", 400
+    image_file = request.files['image']
+
+    if image_file.filename == '':
+        return "No selected file", 400
+
+    filename = secure_filename(image_file.filename)
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    image_file.save(filepath)
+
+    # Process the image using Tesseract
+    try:
+        extracted_text = pytesseract.image_to_string(Image.open(filepath))
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        return "Error processing the image", 500
+
+    # Translate the extracted text if the language is Assamese
+    language = session.get('language', 'en')
+    if language == 'as':
+        extracted_text = translate_text_free_chunked(extracted_text)
+
+    # Send the extracted text to Gemini
+    response = chat_session.send_message(extracted_text)
+    model_reply = response.text.replace("\n", "<br>")
+
+    # Translate the model's reply if necessary
+    if language == 'as':
+        model_reply = translate_text_free_chunked(model_reply)
+
+    # Update chat history
+    chat_history = session.get('chat_history', [])
+    chat_history.append({"role": "user", "text": f"[Image uploaded: {filename}]", "image": f"/static/uploads/{filename}"})
+    chat_history.append({"role": "model", "text": model_reply})
+    session['chat_history'] = chat_history
+    session.modified = True
+
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     app.run(debug=True)
