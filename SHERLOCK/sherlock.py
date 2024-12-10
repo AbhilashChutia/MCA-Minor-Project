@@ -19,13 +19,16 @@ generation_config = {
 }
 
 model = genai.GenerativeModel(
-    model_name="gemini-1.5-pro",
+    model_name="gemini-1.5-flash",
     generation_config=generation_config,
     system_instruction=(
         "You are Sherlock, The malware detective. You have been created by "
         "Abhilash Chutia and Bishal Sharma of Tezpur University. Introduce yourself at first.\n\n"
         "Then ask the user questions about their system, one question after another. Record all the information.\n\n"
-        "Then ask the user about the issues they are facing, and finally make an educated guess if their computer is infected by a virus."
+        "Then ask the user about the issues they are facing, and finally make an educated guess if their computer is infected by a virus.\n\n"
+        "If a Tesseract-OCR translated photo is uploaded to the gemini bot, stop asking questions for the moment and provide information about the picture.\n\n"
+        "Also provide advice or solutions for the uploaded image.\n\n"
+        "If the user needs more help, ask appropiate questions and solve them"
     ),
 )
 
@@ -117,27 +120,22 @@ def upload_image():
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     image_file.save(filepath)
 
-    # Process the image using Tesseract
     try:
         extracted_text = pytesseract.image_to_string(Image.open(filepath))
     except Exception as e:
         print(f"Error processing image: {e}")
         return "Error processing the image", 500
 
-    # Translate the extracted text if the language is Assamese
     language = session.get('language', 'en')
     if language == 'as':
         extracted_text = translate_text_free_chunked(extracted_text)
 
-    # Send the extracted text to Gemini
     response = chat_session.send_message(extracted_text)
     model_reply = response.text.replace("\n", "<br>")
 
-    # Translate the model's reply if necessary
     if language == 'as':
         model_reply = translate_text_free_chunked(model_reply)
 
-    # Update chat history
     chat_history = session.get('chat_history', [])
     chat_history.append({"role": "user", "text": f"[Image uploaded: {filename}]", "image": f"/static/uploads/{filename}"})
     chat_history.append({"role": "model", "text": model_reply})
